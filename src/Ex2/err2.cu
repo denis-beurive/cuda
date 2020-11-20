@@ -2,12 +2,14 @@
 #include <stdlib.h>
 #include <math.h>
 
+#define checkCudaErrors(x) printf("%s (%d)\n", cudaGetErrorString(x), __LINE__)
+
+
 __global__ void kernel(double *a, double *b, double *c, int N)
 {
     int i = blockIdx.x * blockDim.x + threadIdx.x;
 
-    for(i; i<N; i+=(blockDim.x * gridDim.x))
-    {
+    for(i; i<N; i+=(blockDim.x * gridDim.x)) {
         c[i] = a[i] + b[i];
     }
 }
@@ -28,36 +30,38 @@ int main(int argc, char **argv)
     h_c = (double*)malloc(sz_in_bytes);
 
     // Initiate values on h_a and h_b
-    for(int i = 0 ; i < N ; i++)
-    {
-	h_a[i] = 1./(1.+i);
-	h_b[i] = (i-1.)/(i+1.);
+    for(int i = 0 ; i < N ; i++) {
+        h_a[i] = 1./(1.+i);
+        h_b[i] = (i-1.)/(i+1.);
     }
 
     error = cudaMalloc((void**)&d_a, sz_in_bytes);
-printerror = (char*)cudaGetErrorString(error);
-printf("%s\n", printerror);
+    printerror = (char*)cudaGetErrorString(error);
+    printf("%s\n", printerror);
+
     error = cudaMalloc((void**)&d_b, sz_in_bytes);
-printerror = (char*)cudaGetErrorString(error);
-printf("%s\n", printerror);
+    printerror = (char*)cudaGetErrorString(error);
+    printf("%s\n", printerror);
+
     error = cudaMalloc((void**)&d_c, sz_in_bytes);
-printerror = (char*)cudaGetErrorString(error);
-printf("%s\n", printerror);
+    printerror = (char*)cudaGetErrorString(error);
+    printf("%s\n", printerror);
 
     error=cudaMemcpy(d_a, h_a, sz_in_bytes, cudaMemcpyHostToDevice);
-printerror = (char*)cudaGetErrorString(error);
-printf("%s\n", printerror);
+    printerror = (char*)cudaGetErrorString(error);
+    printf("%s\n", printerror);
+
     error=cudaMemcpy(d_b, h_b, sz_in_bytes, cudaMemcpyHostToDevice);
-printerror = (char*)cudaGetErrorString(error);
-printf("%s\n", printerror);
+    printerror = (char*)cudaGetErrorString(error);
+    printf("%s\n", printerror);
 
     dim3  dimBlock(64, 1, 1);
     dim3  dimGrid(10, 1, 1);
     kernel<<<dimGrid , dimBlock>>>(d_a, d_b, d_c, N);
 
     error=cudaMemcpy(h_c, d_c, sz_in_bytes, cudaMemcpyDeviceToHost);
-printerror = (char*)cudaGetErrorString(error);
-printf("%s\n", printerror);
+    printerror = (char*)cudaGetErrorString(error);
+    printf("%s\n", printerror);
 
     cudaFree(d_a);
     cudaFree(d_b);
@@ -65,19 +69,16 @@ printf("%s\n", printerror);
 
     // Verifying
     double err = 0, norm = 0;
-    for(int i = 0 ; i < N ; i++)
-    {
-	double err_loc = fabs(h_c[i] - (h_a[i]+h_b[i]));
-	err  += err_loc;
-	norm += fabs(h_c[i]);
+    for(int i = 0 ; i < N ; i++) {
+        double err_loc = fabs(h_c[i] - (h_a[i]+h_b[i]));
+        err  += err_loc;
+        norm += fabs(h_c[i]);
     }
-    if (err/norm < 1.e-16)
-    {
-	printf("SUCCESS (Relative error : %.3e)\n", err/norm);
+    if (err/norm < 1.e-16) {
+	    printf("SUCCESS (Relative error : %.3e)\n", err/norm);
     }
-    else
-    {
-	printf("ERROR (Relative error : %.3e)\n", err/norm);
+    else {
+	    printf("ERROR (Relative error : %.3e)\n", err/norm);
     }
 
     free(h_a);

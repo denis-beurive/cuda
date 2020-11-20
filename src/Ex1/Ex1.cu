@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <math.h>
 
+
 // Compilation:
 //      nvcc Ex1.cu -o Ex1.exe
 
@@ -68,7 +69,7 @@ int main(int argc, char **argv)
     // Thus, we have 64*16 = 1024 threads.
 
     // Run the "kernel" (in the GPU).
-    // dimGrid: number of block in the greed => 16
+    // dimGrid: number of block in the grid => 16
     // dimBlock: number of threads per bloc => 64
     kernel<<<dimGrid , dimBlock>>>(d_a, d_b, d_c, N);
 
